@@ -154,7 +154,7 @@ struct HabitEditor: View {
                     dismiss()
                 }
                 Button("Keep habit without reminder") { dismiss() }
-            } message: { Text("Your habit was saved. Enable notifications for Bloom in iPhone Settings to use reminders, then turn the habit’s reminder on again.") }
+            } message: { Text("Your habit was saved. Enable notifications for ios-tracker in iPhone Settings to use reminders, then turn the habit’s reminder on again.") }
         }
     }
 

@@ -14,6 +14,7 @@
 		7F965B49D0325F789FE7D912 /* HabitEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C364EF10FAF0998DCA583CEF /* HabitEditor.swift */; };
 		9269B0864000D98F88443A67 /* BloomUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E41115A231C5E0A08B9CB3 /* BloomUITests.swift */; };
 		A542A4D32834472C361CE375 /* ReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC5C1B116DA5FFCA057D9CC /* ReportView.swift */; };
+		A7221276C9E5E333F39BF9AC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BC224443285A1B3E68F48DE2 /* Assets.xcassets */; };
 		C49167F1F223B1FCF3587A80 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51206E651CBEFAFA01D4944D /* TodayView.swift */; };
 		CB52215A5F584B509AB14344 /* HabitDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0747F05A500F136819FC9E62 /* HabitDetailView.swift */; };
 		D585BDB2B7AA1456B3CFDB03 /* StatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FB76F7E61434A5A5792510 /* StatisticsView.swift */; };
@@ -41,8 +42,9 @@
 		51206E651CBEFAFA01D4944D /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		8C1ED4EC3CFF3D243A3070F2 /* BloomUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BloomUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F4F042423CA476301368F48 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		98E8505DE57EAE80ADF460FE /* Bloom.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Bloom.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D33768A3696E48B2F788A53 /* ios-tracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "ios-tracker.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B381333F9F240F850FBAAC37 /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
+		BC224443285A1B3E68F48DE2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C04E1A6687A492F81D18EF36 /* ios-tracker */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ios-tracker"; path = .; sourceTree = SOURCE_ROOT; };
 		C364EF10FAF0998DCA583CEF /* HabitEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEditor.swift; sourceTree = "<group>"; };
 		D3AB74E4ED63078BD66B25E5 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -64,8 +66,8 @@
 		7745B9C980A4222D26C996A5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				98E8505DE57EAE80ADF460FE /* Bloom.app */,
 				8C1ED4EC3CFF3D243A3070F2 /* BloomUITests.xctest */,
+				9D33768A3696E48B2F788A53 /* ios-tracker.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -84,6 +86,7 @@
 			isa = PBXGroup;
 			children = (
 				B381333F9F240F850FBAAC37 /* ActivityView.swift */,
+				BC224443285A1B3E68F48DE2 /* Assets.xcassets */,
 				313CC406F224F4EA59C62E38 /* BloomApp.swift */,
 				0747F05A500F136819FC9E62 /* HabitDetailView.swift */,
 				C364EF10FAF0998DCA583CEF /* HabitEditor.swift */,
@@ -123,6 +126,7 @@
 			buildConfigurationList = D1FC09B999152518155A484B /* Build configuration list for PBXNativeTarget "Bloom" */;
 			buildPhases = (
 				CB91124B23CBF4C891D56ECE /* Sources */,
+				5C026DA0CCF7776646E025FD /* Resources */,
 				EAD3663C11DD0E8D99519909 /* Frameworks */,
 			);
 			buildRules = (
@@ -134,7 +138,7 @@
 				D68A002F32DE0D3D8223D83D /* HabitCore */,
 			);
 			productName = Bloom;
-			productReference = 98E8505DE57EAE80ADF460FE /* Bloom.app */;
+			productReference = 9D33768A3696E48B2F788A53 /* ios-tracker.app */;
 			productType = "com.apple.product-type.application";
 		};
 		2CEF1135CAFF5A0E1B1040FF /* BloomUITests */ = {
@@ -198,6 +202,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		5C026DA0CCF7776646E025FD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7221276C9E5E333F39BF9AC /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		CB91124B23CBF4C891D56ECE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -240,7 +255,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = HabitTracker/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -293,7 +308,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = HabitTracker/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

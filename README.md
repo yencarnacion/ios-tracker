@@ -1,4 +1,4 @@
-# Bloom — iOS habit & activity tracker
+# ios-tracker — iOS habit & activity tracker
 
 A native, offline iPhone app for repeating habits and the things you did just once. Inspired by soft pastel habit cards, a weekly day selector, circular counters, and a calendar report.
 

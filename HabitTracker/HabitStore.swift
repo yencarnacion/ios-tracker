@@ -26,7 +26,7 @@ final class HabitStore {
         } catch {
             document = HabitDocument()
             canWrite = false
-            errorMessage = "Bloom couldn’t read your saved habits. Your original file has been kept. Restore a backup in Settings. \(error.localizedDescription)"
+            errorMessage = "ios-tracker couldn’t read your saved habits. Your original file has been kept. Restore a backup in Settings. \(error.localizedDescription)"
         }
     }
 
@@ -133,7 +133,7 @@ final class HabitStore {
     }
 
     func backupURL() -> URL? {
-        let url = URL.temporaryDirectory.appending(path: "Bloom-backup-\(Day.key(Date())).json")
+        let url = URL.temporaryDirectory.appending(path: "ios-tracker-backup-\(Day.key(Date())).json")
         do { try document.encoded().write(to: url, options: .atomic); return url }
         catch { errorMessage = error.localizedDescription; return nil }
     }

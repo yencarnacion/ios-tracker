@@ -145,7 +145,7 @@ struct ReportView: View {
         anchor = Calendar.current.date(byAdding: period == .weekly ? .weekOfYear : period == .monthly ? .month : .year, value: amount, to: anchor) ?? anchor
     }
     private var reportText: String {
-        "Bloom · \(periodTitle)\n\(summary.rate.formatted(.percent.precision(.fractionLength(0)))) goals met · \(checkIns) check-ins · \(summary.perfectDays) perfect days\n\n" + habits.map { habit in
+        "ios-tracker · \(periodTitle)\n\(summary.rate.formatted(.percent.precision(.fractionLength(0)))) goals met · \(checkIns) check-ins · \(summary.perfectDays) perfect days\n\n" + habits.map { habit in
             let s = HabitSummary(habits: [habit], days: days)
             return "\(habit.emoji) \(habit.title): \(s.completed)/\(s.scheduled) goals met"
         }.joined(separator: "\n")

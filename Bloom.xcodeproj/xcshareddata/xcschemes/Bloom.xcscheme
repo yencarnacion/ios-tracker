@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "03D63355804034CC102CA7FA"
-               BuildableName = "Bloom.app"
+               BuildableName = "ios-tracker.app"
                BlueprintName = "Bloom"
                ReferencedContainer = "container:Bloom.xcodeproj">
             </BuildableReference>
@@ -33,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "03D63355804034CC102CA7FA"
-            BuildableName = "Bloom.app"
+            BuildableName = "ios-tracker.app"
             BlueprintName = "Bloom"
             ReferencedContainer = "container:Bloom.xcodeproj">
          </BuildableReference>
@@ -69,7 +69,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "03D63355804034CC102CA7FA"
-            BuildableName = "Bloom.app"
+            BuildableName = "ios-tracker.app"
             BlueprintName = "Bloom"
             ReferencedContainer = "container:Bloom.xcodeproj">
          </BuildableReference>
@@ -86,7 +86,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "03D63355804034CC102CA7FA"
-            BuildableName = "Bloom.app"
+            BuildableName = "ios-tracker.app"
             BlueprintName = "Bloom"
             ReferencedContainer = "container:Bloom.xcodeproj">
          </BuildableReference>

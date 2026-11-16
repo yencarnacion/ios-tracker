@@ -18,10 +18,10 @@ struct SettingsView: View {
             List {
                 Section {
                     HStack(spacing: 15) {
-                        Text("🌷").font(.system(size: 42)).frame(width: 70, height: 70)
-                            .background(BloomStyle.pinkTrack.opacity(0.5), in: RoundedRectangle(cornerRadius: 20))
+                        Image("AppMark").resizable().frame(width: 70, height: 70)
+                            .clipShape(RoundedRectangle(cornerRadius: 17)).accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 5) {
-                            Text("Bloom").font(.system(size: 27, weight: .bold, design: .rounded))
+                            Text("ios-tracker").font(.system(size: 27, weight: .bold, design: .rounded))
                             Text("Little steps, every day.").font(.subheadline).foregroundStyle(BloomStyle.secondary)
                         }
                     }.padding(.vertical, 8)
@@ -106,7 +106,7 @@ struct SettingsView: View {
                          String(log.amount), habit.unit, log.note])
         }
         let csv = rows.map { $0.map(cell).joined(separator: ",") }.joined(separator: "\r\n")
-        let url = URL.temporaryDirectory.appending(path: "Bloom-check-ins.csv")
+        let url = URL.temporaryDirectory.appending(path: "ios-tracker-check-ins.csv")
         do { try Data(csv.utf8).write(to: url, options: .atomic); sharedFile = SharedFile(url: url) }
         catch { store.errorMessage = error.localizedDescription }
     }
