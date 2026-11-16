@@ -33,6 +33,8 @@ public struct Habit: Identifiable, Codable, Equatable, Sendable {
     /// Calendar weekday numbers: Sunday = 1, Monday = 2.
     public var weekdays: Set<Int>
     public var oneOffDate: Date?
+    /// Missing in version 1 backups; those retain their weekday or one-off schedule.
+    public var schedule: TaskSchedule?
     public var createdAt: Date
     public var archivedAt: Date?
     public var reminderHour: Int?
@@ -42,22 +44,33 @@ public struct Habit: Identifiable, Codable, Equatable, Sendable {
     public init(id: UUID = UUID(), title: String, emoji: String = "🌟", tint: HabitTint = .mint,
                 target: Int = 1, unit: String = "", weekdays: Set<Int> = Set(1...7),
                 createdAt: Date = Date(), oneOffDate: Date? = nil, archivedAt: Date? = nil, reminderHour: Int? = nil,
-                reminderMinute: Int = 0, entries: [String: HabitEntry] = [:]) {
+                reminderMinute: Int = 0, entries: [String: HabitEntry] = [:], schedule: TaskSchedule? = nil) {
         self.id = id; self.title = title; self.emoji = emoji; self.tint = tint
         self.target = target; self.unit = unit; self.weekdays = weekdays
         self.createdAt = createdAt; self.oneOffDate = oneOffDate; self.archivedAt = archivedAt
         self.reminderHour = reminderHour; self.reminderMinute = reminderMinute
         self.entries = entries
+        self.schedule = schedule
+    }
+
+    public var effectiveSchedule: TaskSchedule { schedule ?? oneOffDate.map(TaskSchedule.once) ?? .weekdays(weekdays) }
+    public var isOneOff: Bool { effectiveSchedule.kind == .once }
+    public var scheduledOnceDate: Date? {
+        if case .once(let date) = effectiveSchedule { return date }
+        return nil
+    }
+
+    public func nextScheduledDate(onOrAfter date: Date = Date(), calendar: Calendar = .current) -> Date? {
+        guard let next = effectiveSchedule.nextOccurrence(onOrAfter: date, starting: createdAt, calendar: calendar) else { return nil }
+        if let archivedAt, next > calendar.startOfDay(for: archivedAt) { return nil }
+        return next
     }
 
     public func isScheduled(on date: Date, calendar: Calendar = .current) -> Bool {
         let day = calendar.startOfDay(for: date)
-        if let oneOffDate { return calendar.isDate(oneOffDate, inSameDayAs: day) }
         if !entry(on: date, calendar: calendar).logs.isEmpty { return true }
-        guard day >= calendar.startOfDay(for: createdAt),
-              weekdays.contains(calendar.component(.weekday, from: day)) else { return false }
         if let archivedAt, day > calendar.startOfDay(for: archivedAt) { return false }
-        return true
+        return effectiveSchedule.isDue(on: day, starting: createdAt, calendar: calendar)
     }
 
     public func entry(on date: Date, calendar: Calendar = .current) -> HabitEntry {
@@ -113,7 +126,7 @@ public struct Habit: Identifiable, Codable, Equatable, Sendable {
 
     public func bestStreak(through today: Date = Date(), calendar: Calendar = .current) -> Int {
         var best = 0, streak = 0
-        for day in Day.range(from: createdAt, through: today, calendar: calendar) where isScheduled(on: day, calendar: calendar) {
+        for day in Day.range(from: historyStart(calendar: calendar), through: today, calendar: calendar) where isScheduled(on: day, calendar: calendar) {
             streak = isComplete(on: day, calendar: calendar) ? streak + 1 : 0
             best = max(best, streak)
         }
@@ -122,13 +135,17 @@ public struct Habit: Identifiable, Codable, Equatable, Sendable {
 
     public func currentStreak(through today: Date = Date(), calendar: Calendar = .current) -> Int {
         var streak = 0
-        for day in Day.range(from: createdAt, through: today, calendar: calendar).reversed() where isScheduled(on: day, calendar: calendar) {
+        for day in Day.range(from: historyStart(calendar: calendar), through: today, calendar: calendar).reversed() where isScheduled(on: day, calendar: calendar) {
             // A habit due today still has time to be completed.
             if calendar.isDate(day, inSameDayAs: today) && !isComplete(on: day, calendar: calendar) { continue }
             guard isComplete(on: day, calendar: calendar) else { break }
             streak += 1
         }
         return streak
+    }
+
+    private func historyStart(calendar: Calendar) -> Date {
+        entries.filter { !$0.value.logs.isEmpty }.keys.compactMap { Day.date($0, calendar: calendar) }.min().map { min($0, createdAt) } ?? createdAt
     }
 }
 
@@ -196,7 +213,7 @@ public struct HabitSummary: Equatable, Sendable {
 }
 
 public struct HabitDocument: Codable, Equatable, Sendable {
-    public var version: Int = 1
+    public var version: Int = 2
     public var habits: [Habit]
     public var moods: [String: String]
     public init(habits: [Habit] = [], moods: [String: String] = [:]) {
@@ -214,8 +231,8 @@ public struct HabitDocument: Codable, Equatable, Sendable {
         guard data.count <= 10_000_000 else { throw DocumentError.tooLarge }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        let doc = try decoder.decode(Self.self, from: data)
-        guard doc.version == 1 else { throw DocumentError.version }
+        var doc = try decoder.decode(Self.self, from: data)
+        guard (1...2).contains(doc.version) else { throw DocumentError.version }
         guard doc.habits.count <= 500, Set(doc.habits.map(\.id)).count == doc.habits.count else { throw DocumentError.invalid }
         for h in doc.habits {
             guard !h.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -223,6 +240,7 @@ public struct HabitDocument: Codable, Equatable, Sendable {
                   (1...9999).contains(h.target), !h.weekdays.isEmpty, h.weekdays.isSubset(of: Set(1...7)),
                   h.reminderHour.map({ (0...23).contains($0) }) ?? true,
                   (0...59).contains(h.reminderMinute),
+                  h.effectiveSchedule.isValid,
                   h.createdAt >= Date(timeIntervalSince1970: 0) else { throw DocumentError.invalid }
             var logIDs = Set<UUID>()
             for (key, entry) in h.entries {
@@ -237,6 +255,7 @@ public struct HabitDocument: Codable, Equatable, Sendable {
         for (key, mood) in doc.moods {
             guard Day.date(key) != nil, mood.count <= 4 else { throw DocumentError.invalid }
         }
+        doc.version = 2
         return doc
     }
 

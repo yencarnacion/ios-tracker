@@ -44,9 +44,9 @@ struct SettingsView: View {
                     Button {
                         if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
                     } label: { settingsRow("Notification settings", symbol: "bell", color: .orange) }
-                } footer: { Text("Reminders are optional and scheduled locally. Manage each habit’s reminder in its editor.") }
+                } footer: { Text("Weekday reminders repeat automatically once the schedule starts. Other schedules prepare their next seven reminders when you open the app. Manage a task’s reminder in its editor.") }
                 Section {
-                    LabeledContent("Version", value: "1.0.0")
+                    LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.1.0")
                     Link(destination: URL(string: "https://github.com/yencarnacion/ios-tracker")!) {
                         settingsRow("Source code", symbol: "chevron.left.forwardslash.chevron.right", color: BloomStyle.secondary)
                     }
@@ -97,11 +97,11 @@ struct SettingsView: View {
             let safe = ["=", "+", "-", "@", "\t", "\r"].contains(where: value.hasPrefix) ? "'" + value : value
             return "\"" + safe.replacingOccurrences(of: "\"", with: "\"\"") + "\""
         }
-        var rows = [["Item", "Type", "Local date", "Local time", "Timestamp (UTC)", "Amount", "Unit", "Note"]]
+        var rows = [["Item", "Type", "Schedule", "Local date", "Local time", "Timestamp (UTC)", "Amount", "Unit", "Note"]]
         let pairs = store.document.habits.flatMap { habit in habit.allLogs.map { (habit, $0) } }
             .sorted { $0.1.occurredAt < $1.1.occurredAt }
         for (habit, log) in pairs {
-            rows.append([habit.title, habit.oneOffDate == nil ? "Habit" : "One-off", Day.key(log.occurredAt),
+            rows.append([habit.title, habit.isOneOff ? "One-off" : "Recurring", habit.effectiveSchedule.summary(), Day.key(log.occurredAt),
                          log.occurredAt.formatted(date: .omitted, time: .standard), log.occurredAt.ISO8601Format(),
                          String(log.amount), habit.unit, log.note])
         }
@@ -128,7 +128,7 @@ struct ManageHabitsView: View {
                         Text(habit.emoji).font(.system(size: 26))
                         VStack(alignment: .leading, spacing: 4) {
                             Text(habit.title)
-                            Text(habit.oneOffDate.map { "One-off · \($0.formatted(date: .abbreviated, time: .omitted))" } ?? "\(habit.target) \(habit.unit) · \(habit.weekdays.count == 7 ? "Every day" : "\(habit.weekdays.count) days a week")")
+                            Text(habit.effectiveSchedule.summary())
                                 .font(.caption).foregroundStyle(BloomStyle.secondary)
                         }
                         Spacer()

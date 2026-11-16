@@ -13,6 +13,7 @@
 		7B016A8B6344CD7ACE870528 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4F042423CA476301368F48 /* SettingsView.swift */; };
 		7F965B49D0325F789FE7D912 /* HabitEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C364EF10FAF0998DCA583CEF /* HabitEditor.swift */; };
 		9269B0864000D98F88443A67 /* BloomUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E41115A231C5E0A08B9CB3 /* BloomUITests.swift */; };
+		9BA999FC3411DD98A6F0FCB9 /* UpcomingTasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E441676F404FD025109A16D9 /* UpcomingTasksView.swift */; };
 		A542A4D32834472C361CE375 /* ReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC5C1B116DA5FFCA057D9CC /* ReportView.swift */; };
 		A7221276C9E5E333F39BF9AC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BC224443285A1B3E68F48DE2 /* Assets.xcassets */; };
 		C49167F1F223B1FCF3587A80 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51206E651CBEFAFA01D4944D /* TodayView.swift */; };
@@ -49,6 +50,7 @@
 		C364EF10FAF0998DCA583CEF /* HabitEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEditor.swift; sourceTree = "<group>"; };
 		D3AB74E4ED63078BD66B25E5 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		D7E41115A231C5E0A08B9CB3 /* BloomUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloomUITests.swift; sourceTree = "<group>"; };
+		E441676F404FD025109A16D9 /* UpcomingTasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingTasksView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +99,7 @@
 				01FB76F7E61434A5A5792510 /* StatisticsView.swift */,
 				D3AB74E4ED63078BD66B25E5 /* Theme.swift */,
 				51206E651CBEFAFA01D4944D /* TodayView.swift */,
+				E441676F404FD025109A16D9 /* UpcomingTasksView.swift */,
 			);
 			path = HabitTracker;
 			sourceTree = "<group>";
@@ -228,6 +231,7 @@
 				D585BDB2B7AA1456B3CFDB03 /* StatisticsView.swift in Sources */,
 				066F2A4D8AA21AA0DE6DDD65 /* Theme.swift in Sources */,
 				C49167F1F223B1FCF3587A80 /* TodayView.swift in Sources */,
+				9BA999FC3411DD98A6F0FCB9 /* UpcomingTasksView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,13 +259,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				INFOPLIST_FILE = HabitTracker/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yencarnacion.bloomhabits;
 				PRODUCT_NAME = "ios-tracker";
 				SDKROOT = iphoneos;
@@ -309,13 +313,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				INFOPLIST_FILE = HabitTracker/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yencarnacion.bloomhabits;
 				PRODUCT_NAME = "ios-tracker";
 				SDKROOT = iphoneos;

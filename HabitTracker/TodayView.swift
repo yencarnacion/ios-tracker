@@ -16,6 +16,7 @@ struct TodayView: View {
     @State private var showDatePicker = false
     @State private var showActivity = false
     @State private var addingForDay = false
+    @State private var showUpcoming = false
 
     private var due: [Habit] { store.activeHabits.filter { $0.isScheduled(on: date) } }
     private var visible: [Habit] {
@@ -34,10 +35,8 @@ struct TodayView: View {
                             else { Text(item.rawValue) }
                         }
                     }
-                    if !isFuture {
-                        Divider()
-                        Button("Add one-off for this day", systemImage: "plus") { addingForDay = true }
-                    }
+                    Divider()
+                    Button(isFuture ? "Schedule a task for this day" : "Add one-off for this day", systemImage: "plus") { addingForDay = true }
                 } label: {
                     HStack(spacing: 5) {
                         Text(filter.rawValue).font(.system(size: 15, weight: .medium))
@@ -87,6 +86,11 @@ struct TodayView: View {
                         .foregroundStyle(BloomStyle.secondary).padding(.vertical, 14)
                 }.accessibilityLabel("All activity timeline")
                 Spacer(minLength: 6)
+                Button { showUpcoming = true } label: {
+                    Label("Upcoming", systemImage: "calendar").font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(BloomStyle.secondary).padding(.vertical, 14)
+                }.accessibilityLabel("Upcoming tasks")
+                Spacer(minLength: 6)
                 Button { showCompleteAll = true } label: {
                     HStack(spacing: 5) {
                         Image(systemName: "checkmark.seal.fill").foregroundStyle(BloomStyle.mint)
@@ -101,6 +105,7 @@ struct TodayView: View {
         .sheet(item: $selectedHabit) { habit in HabitDetailView(habitID: habit.id, date: date) }
         .sheet(item: $editingHabit) { HabitEditor(existing: $0) }
         .sheet(isPresented: $showActivity) { ActivityView() }
+        .sheet(isPresented: $showUpcoming) { UpcomingTasksView() }
         .sheet(isPresented: $addingForDay) { HabitEditor(initialDate: date, initialOneOff: true) }
         .sheet(isPresented: $showDatePicker) {
             NavigationStack {
@@ -170,8 +175,8 @@ struct TodayView: View {
                         if let last = habit.entry(on: date).logs.max(by: { $0.occurredAt < $1.occurredAt }) {
                             Text("\(habit.entry(on: date).logs.count) \(habit.entry(on: date).logs.count == 1 ? "check-in" : "check-ins") · \(last.occurredAt.formatted(date: .omitted, time: .shortened))")
                                 .font(.system(size: 11)).foregroundStyle(BloomStyle.secondary)
-                        } else if habit.oneOffDate != nil {
-                            Text("Just this day").font(.system(size: 11)).foregroundStyle(BloomStyle.secondary)
+                        } else {
+                            Text(habit.effectiveSchedule.summary()).font(.system(size: 11)).foregroundStyle(BloomStyle.secondary)
                         }
                     }
                     Spacer(minLength: 3)

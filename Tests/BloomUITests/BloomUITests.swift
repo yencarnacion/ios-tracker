@@ -23,7 +23,8 @@ final class BloomUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["habit-count"].label, "5")
         app.buttons["Close habit"].tap()
         app.buttons["Add habit"].tap()
-        app.buttons["Just this day"].tap()
+        app.buttons["schedule-type"].tap()
+        app.buttons["One time"].tap()
         let name = app.textFields["habit-name"]
         name.tap(); name.typeText("Collected parcel")
         app.buttons["save-habit"].tap()
@@ -55,5 +56,71 @@ final class BloomUITests: XCTestCase {
         app.launch()
         app.buttons["habit-Drink water"].tap()
         XCTAssertEqual(app.staticTexts["habit-count"].label, "5")
+    }
+
+    @MainActor
+    func testFutureOneTimeTaskHasNoPrematureCheckIn() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--reset-data"]
+        app.launch()
+        app.buttons["Add habit"].tap()
+        app.buttons["schedule-type"].tap()
+        app.buttons["One time"].tap()
+        app.buttons["due-tomorrow"].tap()
+        XCTAssertFalse(app.switches["Record first check-in"].exists)
+        let name = app.textFields["habit-name"]
+        name.tap(); name.typeText("Future appointment")
+        app.buttons["save-habit"].tap()
+        XCTAssertFalse(app.buttons["habit-Future appointment"].exists)
+        app.buttons["Upcoming tasks"].tap()
+        let upcoming = app.buttons["upcoming-Future appointment"]
+        XCTAssertTrue(upcoming.waitForExistence(timeout: 5)); upcoming.tap()
+        XCTAssertEqual(app.staticTexts["habit-count"].label, "0")
+        XCTAssertFalse(app.buttons["add-one"].isEnabled)
+        app.buttons["Close habit"].tap()
+        app.buttons["Done"].tap()
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        if Calendar.current.component(.weekday, from: Date()) != 1 {
+            app.buttons[tomorrow.formatted(date: .complete, time: .omitted)].tap()
+            XCTAssertTrue(app.buttons["habit-Future appointment"].waitForExistence(timeout: 5))
+        }
+    }
+
+    @MainActor
+    func testIntervalScheduleCanBeCreatedEditedAndReloaded() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--reset-data"]
+        app.launch()
+        app.buttons["Add habit"].tap()
+        app.buttons["schedule-type"].tap()
+        app.buttons["Every X days"].tap()
+        let interval = app.textFields["interval-days"]
+        interval.doubleTap()
+        if app.menuItems["Select All"].exists { app.menuItems["Select All"].tap() }
+        interval.typeText("730")
+        XCTAssertEqual(interval.value as? String, "730")
+        app.buttons["due-tomorrow"].tap()
+        let name = app.textFields["habit-name"]
+        name.tap(); name.typeText("Interval task")
+        app.buttons["save-habit"].tap()
+        app.buttons["Upcoming tasks"].tap()
+        app.buttons["upcoming-Interval task"].tap()
+        XCTAssertTrue(app.staticTexts["Every 730 days"].exists)
+        app.buttons["Item options"].tap()
+        app.buttons["Edit item"].tap()
+        XCTAssertEqual(app.textFields["interval-days"].value as? String, "730")
+        app.textFields["interval-days"].doubleTap()
+        if app.menuItems["Select All"].exists { app.menuItems["Select All"].tap() }
+        app.textFields["interval-days"].typeText("7")
+        app.buttons["save-habit"].tap()
+        XCTAssertTrue(app.staticTexts["Every 7 days"].waitForExistence(timeout: 5))
+        app.terminate()
+        app.launchArguments = ["--uitesting"]
+        app.launch()
+        app.buttons["Upcoming tasks"].tap()
+        app.buttons["upcoming-Interval task"].tap()
+        XCTAssertTrue(app.staticTexts["Every 7 days"].exists)
     }
 }

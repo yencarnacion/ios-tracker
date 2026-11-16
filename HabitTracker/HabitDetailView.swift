@@ -40,7 +40,7 @@ struct HabitDetailView: View {
                     VStack(spacing: 22) {
                         VStack(spacing: 5) {
                             Text(date.dayTitle).font(.system(size: 14, weight: .medium)).foregroundStyle(BloomStyle.secondary)
-                            if habit.oneOffDate != nil { Text("Just this day · never repeats").font(.caption).foregroundStyle(BloomStyle.secondary) }
+                            Text(habit.effectiveSchedule.summary()).font(.caption).foregroundStyle(BloomStyle.secondary)
                         }.padding(.top, 19)
 
                         ZStack {
@@ -180,13 +180,13 @@ struct LogEditor: View {
                             .accessibilityIdentifier("log-amount")
                     }
                     DatePicker("When", selection: $timestamp, in: allowedRange,
-                               displayedComponents: habit?.oneOffDate == nil ? [.date, .hourAndMinute] : [.hourAndMinute])
+                               displayedComponents: habit?.isOneOff == true ? [.hourAndMinute] : [.date, .hourAndMinute])
                         .accessibilityIdentifier("log-time")
                     TextField("Add a note (optional)", text: $note, axis: .vertical).lineLimit(3...6)
                         .onChange(of: note) { _, value in note = String(value.prefix(5000)) }
                 } header: { Text("\(habit?.emoji ?? "") \(habit?.title ?? "Entry")") }
                 footer: {
-                    Text(habit?.oneOffDate == nil ? "This check-in has its own timestamp. Changing its date moves it to that day’s timeline." : "This one-off belongs to \(date.formatted(date: .abbreviated, time: .omitted)). Every check-in keeps its own time on that day.")
+                    Text(habit?.isOneOff != true ? "This check-in has its own timestamp. Changing its date moves it to that day’s timeline." : "This one-off belongs to \(date.formatted(date: .abbreviated, time: .omitted)). Every check-in keeps its own time on that day.")
                 }
                 if existing != nil {
                     Section { Button("Delete entry", role: .destructive) { showDelete = true } }
@@ -216,10 +216,11 @@ struct LogEditor: View {
     }
 
     private var allowedRange: ClosedRange<Date> {
-        if let day = habit?.oneOffDate {
+        if let day = habit?.scheduledOnceDate {
             let start = Calendar.current.startOfDay(for: day)
             return start...max(start, min(Date(), Day.adding(1, to: start).addingTimeInterval(-1)))
         }
-        return min(Calendar.current.startOfDay(for: habit?.createdAt ?? date), Date())...Date()
+        let first = min(habit?.createdAt ?? date, existing?.occurredAt ?? date)
+        return min(Calendar.current.startOfDay(for: first), Date())...Date()
     }
 }

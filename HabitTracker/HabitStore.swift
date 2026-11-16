@@ -166,20 +166,17 @@ actor ReminderScheduler {
         let settings = await center.notificationSettings()
         center.removeAllPendingNotificationRequests()
         guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else { return }
-        // iOS allows 64 pending notifications; eight habits fit even with seven weekly triggers each.
-        for habit in habits.filter({ $0.reminderHour != nil && $0.oneOffDate == nil }).prefix(8) {
-            guard let hour = habit.reminderHour else { continue }
-            let weekdays: [Int?] = habit.weekdays.count == 7 ? [nil] : habit.weekdays.sorted().map { Optional($0) }
-            for weekday in weekdays {
-                var components = DateComponents()
-                components.hour = hour; components.minute = habit.reminderMinute; components.weekday = weekday
+        // Eight items × at most seven requests stays below iOS's 64-request limit.
+        let now = Date()
+        for habit in habits.filter({ $0.reminderHour != nil }).prefix(8) {
+            for reminder in habit.reminders(after: now) {
                 let content = UNMutableNotificationContent()
                 content.title = "\(habit.emoji) \(habit.title)"
                 content.body = "A little progress goes a long way. Your habit is ready."
                 content.sound = .default
-                let id = "\(habit.id)-\(weekday ?? 0)"
+                let id = "\(habit.id)-\(reminder.suffix)"
                 try? await center.add(UNNotificationRequest(identifier: id, content: content,
-                    trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: true)))
+                    trigger: UNCalendarNotificationTrigger(dateMatching: reminder.components, repeats: reminder.repeats)))
             }
         }
     }

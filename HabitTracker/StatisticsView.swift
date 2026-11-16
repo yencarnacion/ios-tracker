@@ -69,7 +69,7 @@ struct StatisticsView: View {
                         }
                     }.frame(width: 187, height: 187).padding(.top, 10)
                     HStack {
-                        metric("Best habit streak", value: "\(habits.filter { $0.oneOffDate == nil }.map { $0.bestStreak() }.max() ?? 0)", symbol: "medal.fill", color: .orange)
+                        metric("Best habit streak", value: "\(habits.filter { !$0.isOneOff }.map { $0.bestStreak() }.max() ?? 0)", symbol: "medal.fill", color: .orange)
                         metric("Perfect days", value: "\(summary.perfectDays)", symbol: "calendar.badge.checkmark", color: .blue)
                     }
                     HStack {
@@ -167,7 +167,6 @@ struct DayHistoryView: View {
                     ToolbarItem(placement: .primaryAction) {
                         Button { adding = true } label: { Image(systemName: "plus") }
                             .accessibilityLabel("Add item for this day")
-                            .disabled(Calendar.current.startOfDay(for: date) > Calendar.current.startOfDay(for: Date()))
                     }
                 }
                 .sheet(item: $selectedHabit) { HabitDetailView(habitID: $0.id, date: date) }
