@@ -8,6 +8,7 @@ final class HabitStore {
     var errorMessage: String?
     private let fileURL: URL
     private var canWrite = true
+    private var reminderTask: Task<Void, Never>?
 
     init() {
         let testing = ProcessInfo.processInfo.arguments.contains("--uitesting")
@@ -147,7 +148,11 @@ final class HabitStore {
 
     func refreshReminders() {
         let habits = activeHabits
-        Task { await ReminderScheduler.reschedule(habits) }
+        let previous = reminderTask
+        reminderTask = Task {
+            await previous?.value
+            await ReminderScheduler.reschedule(habits)
+        }
     }
 }
 

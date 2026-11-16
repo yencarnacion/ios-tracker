@@ -3,6 +3,7 @@ import XCTest
 final class BloomUITests: XCTestCase {
     @MainActor
     func testTimestampedLoggingAndOneOffCreation() throws {
+        continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--reset-data"]
         app.launch()
@@ -14,7 +15,10 @@ final class BloomUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["2 entries"].exists)
         app.buttons["Log amount and time"].tap()
         let amount = app.textFields["log-amount"]
-        amount.tap(); amount.typeText(XCUIKeyboardKey.delete.rawValue + "3")
+        amount.doubleTap()
+        if app.menuItems["Select All"].exists { app.menuItems["Select All"].tap() }
+        amount.typeText("3")
+        XCTAssertEqual(amount.value as? String, "3")
         app.buttons["save-entry"].tap()
         XCTAssertEqual(app.staticTexts["habit-count"].label, "5")
         app.buttons["Close habit"].tap()
@@ -29,9 +33,12 @@ final class BloomUITests: XCTestCase {
         app.buttons["add-one"].tap()
         XCTAssertEqual(app.staticTexts["habit-count"].label, "2")
         app.buttons["Close habit"].tap()
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
-        app.buttons[tomorrow.formatted(date: .complete, time: .omitted)].tap()
-        XCTAssertFalse(app.buttons["habit-Collected parcel"].exists)
+        // Keep the comparison inside the visible Monday–Sunday week.
+        let offset = Calendar.current.component(.weekday, from: Date()) == 1 ? -1 : 1
+        let otherDay = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+        app.buttons[otherDay.formatted(date: .complete, time: .omitted)].tap()
+        let absent = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.buttons["habit-Collected parcel"])
+        XCTAssertEqual(XCTWaiter.wait(for: [absent], timeout: 5), .completed)
         app.buttons[Date().formatted(date: .complete, time: .omitted)].tap()
         app.buttons["All activity timeline"].tap()
         XCTAssertTrue(app.staticTexts["Collected parcel"].exists)

@@ -27,7 +27,7 @@ struct HabitEditor: View {
     private let weekLabels = ["M", "T", "W", "T", "F", "S", "S"]
     private let weekValues = [2, 3, 4, 5, 6, 7, 1]
     private var valid: Bool {
-        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !weekdays.isEmpty && !emoji.isEmpty &&
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && (oneOff || !weekdays.isEmpty) && !emoji.isEmpty &&
         (!(oneOff && existing == nil && logOnSave) || ((1...9999).contains(Int(firstAmount) ?? 0) && firstLogTime <= Date()))
     }
 
@@ -160,12 +160,12 @@ struct HabitEditor: View {
 
     private func save() async {
         saving = true
-        let allowed = reminder ? await ReminderScheduler.requestAccess() : false
+        let allowed = reminder && !oneOff ? await ReminderScheduler.requestAccess() : false
         var habit = existing ?? Habit(title: title)
         habit.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         habit.emoji = emoji; habit.tint = tint; habit.target = target
         habit.unit = unit.trimmingCharacters(in: .whitespacesAndNewlines)
-        habit.weekdays = weekdays
+        habit.weekdays = oneOff ? Set(1...7) : weekdays
         habit.createdAt = Calendar.current.startOfDay(for: startDate)
         habit.oneOffDate = oneOff ? Calendar.current.startOfDay(for: startDate) : nil
         habit.reminderHour = reminder && allowed && !oneOff ? Calendar.current.component(.hour, from: reminderTime) : nil
