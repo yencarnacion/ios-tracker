@@ -17,7 +17,9 @@ struct HabitDetailView: View {
     private var isFuture: Bool { Calendar.current.startOfDay(for: date) > Calendar.current.startOfDay(for: Date()) }
 
     var body: some View {
-        if let habit {
+        if habit?.isNumeric == true {
+            NumericTrackerDetail(habitID: habitID, date: date)
+        } else if let habit {
             VStack(spacing: 0) {
                 HStack {
                     RoundButton(symbol: "chevron.left", label: "Close habit") { dismiss() }
@@ -36,7 +38,7 @@ struct HabitDetailView: View {
                     }.accessibilityLabel("Item options")
                 }.padding(.horizontal, 20).padding(.top, 20)
 
-                ScrollView {
+                ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 22) {
                         VStack(spacing: 5) {
                             Text(date.dayTitle).font(.system(size: 14, weight: .medium)).foregroundStyle(BloomStyle.secondary)
@@ -57,7 +59,7 @@ struct HabitDetailView: View {
                         HStack(spacing: 17) {
                             Button {
                                 if Calendar.current.isDateInToday(date) {
-                                    withAnimation { store.record(HabitLog(), for: habitID) }
+                                    _ = withAnimation { store.record(HabitLog(), for: habitID) }
                                 } else { showLog = true }
                             } label: {
                                 Label(Calendar.current.isDateInToday(date) ? "Add 1 now" : "Add 1", systemImage: "plus").font(.system(size: 17, weight: .semibold))
@@ -146,18 +148,20 @@ struct LogRow: View {
                 .frame(width: 32, height: 40)
             VStack(alignment: .leading, spacing: 4) {
                 Text(log.occurredAt.formatted(date: .omitted, time: .standard)).font(.system(size: 16, weight: .semibold))
+                if habit.isNumeric { Text(habit.valueSummary(for: log)).font(.system(size: 13)).foregroundStyle(BloomStyle.ink) }
                 if !log.note.isEmpty { Text(log.note).font(.system(size: 13)).foregroundStyle(BloomStyle.secondary) }
             }
             Spacer()
-            Text("+\(log.amount)\(habit.unit.isEmpty ? "" : " \(habit.unit)")")
+            if !habit.isNumeric { Text("+\(log.amount)\(habit.unit.isEmpty ? "" : " \(habit.unit)")")
                 .font(.system(size: 14, weight: .medium)).foregroundStyle(BloomStyle.ink)
+            }
             Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(BloomStyle.secondary)
         }.foregroundStyle(BloomStyle.ink).padding(12)
             .background(habit.tint.background.opacity(0.65), in: RoundedRectangle(cornerRadius: 13))
     }
 }
 
-struct LogEditor: View {
+struct CounterLogEditor: View {
     @Environment(HabitStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     let habitID: UUID

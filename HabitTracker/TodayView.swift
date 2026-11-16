@@ -17,6 +17,7 @@ struct TodayView: View {
     @State private var showActivity = false
     @State private var addingForDay = false
     @State private var showUpcoming = false
+    @State private var loggingHabit: Habit?
 
     private var due: [Habit] { store.activeHabits.filter { $0.isScheduled(on: date) } }
     private var visible: [Habit] {
@@ -24,6 +25,7 @@ struct TodayView: View {
     }
     private var isFuture: Bool { date > Calendar.current.startOfDay(for: Date()) }
     private var allDone: Bool { !due.isEmpty && due.allSatisfy { $0.isComplete(on: date) } }
+    private var quickTasks: [Habit] { due.filter { !$0.isNumeric && !$0.isComplete(on: date) } }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -94,9 +96,9 @@ struct TodayView: View {
                 Button { showCompleteAll = true } label: {
                     HStack(spacing: 5) {
                         Image(systemName: "checkmark.seal.fill").foregroundStyle(BloomStyle.mint)
-                        Text(allDone ? "All done" : "Complete all").foregroundStyle(BloomStyle.secondary)
+                        Text(allDone ? "All done" : due.contains(where: \.isNumeric) ? "Complete tasks" : "Complete all").foregroundStyle(BloomStyle.secondary)
                     }.font(.system(size: 13, weight: .medium)).padding(.vertical, 14)
-                }.disabled(due.isEmpty || allDone || isFuture).accessibilityIdentifier("complete-all")
+                }.disabled(quickTasks.isEmpty || isFuture).accessibilityIdentifier("complete-all")
             }.padding(.horizontal, 23).padding(.top, 4)
         }
         .background(.white)
@@ -104,6 +106,7 @@ struct TodayView: View {
         .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in refreshDay() }
         .sheet(item: $selectedHabit) { habit in HabitDetailView(habitID: habit.id, date: date) }
         .sheet(item: $editingHabit) { HabitEditor(existing: $0) }
+        .sheet(item: $loggingHabit) { LogEditor(habitID: $0.id, date: date) }
         .sheet(isPresented: $showActivity) { ActivityView() }
         .sheet(isPresented: $showUpcoming) { UpcomingTasksView() }
         .sheet(isPresented: $addingForDay) { HabitEditor(initialDate: date, initialOneOff: true) }
@@ -121,8 +124,8 @@ struct TodayView: View {
             }
             Button("Cancel", role: .cancel) { }
         }
-        .confirmationDialog("Complete every habit for \(date.dayTitle.lowercased())?", isPresented: $showCompleteAll, titleVisibility: .visible) {
-            Button("Complete \(due.count) habits") { withAnimation { store.completeAll(on: date) } }
+        .confirmationDialog("Complete the remaining check-in tasks for \(date.dayTitle.lowercased())? Value trackers require recorded values.", isPresented: $showCompleteAll, titleVisibility: .visible) {
+            Button("Complete \(quickTasks.count) tasks") { withAnimation { store.completeAll(on: date) } }
             Button("Cancel", role: .cancel) { }
         }
     }
@@ -173,6 +176,7 @@ struct TodayView: View {
                         Text(habit.title).font(.system(size: 17, weight: .medium)).foregroundStyle(BloomStyle.ink)
                             .multilineTextAlignment(.leading).lineLimit(2)
                         if let last = habit.entry(on: date).logs.max(by: { $0.occurredAt < $1.occurredAt }) {
+                            if habit.isNumeric { Text(habit.valueSummary(for: last)).font(.system(size: 12)).foregroundStyle(BloomStyle.ink).lineLimit(2) }
                             Text("\(habit.entry(on: date).logs.count) \(habit.entry(on: date).logs.count == 1 ? "check-in" : "check-ins") · \(last.occurredAt.formatted(date: .omitted, time: .shortened))")
                                 .font(.system(size: 11)).foregroundStyle(BloomStyle.secondary)
                         } else {
@@ -183,18 +187,20 @@ struct TodayView: View {
                 }.padding(.leading, 16).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 72)
             }.buttonStyle(.plain).accessibilityIdentifier("habit-\(habit.title)")
             Button {
-                if completed { selectedHabit = habit }
+                if habit.isNumeric { loggingHabit = habit }
+                else if completed { selectedHabit = habit }
                 else { withAnimation(.spring(response: 0.3)) { store.setCount(habit.target, for: habit.id, on: date) } }
             } label: {
                 HStack(spacing: 5) {
-                    if completed { Image(systemName: "checkmark.circle.fill").foregroundStyle(habit.tint.accent) }
+                    if habit.isNumeric { Image(systemName: "plus.circle.fill").foregroundStyle(habit.tint.accent) }
+                    else if completed { Image(systemName: "checkmark.circle.fill").foregroundStyle(habit.tint.accent) }
                     else {
                         Text("\(habit.entry(on: date).count)/\(habit.target)\(habit.unit == "min" ? "min" : "")")
                             .foregroundStyle(BloomStyle.ink)
                     }
                 }.font(.system(size: 16)).frame(minWidth: 49, minHeight: 60).padding(.trailing, 14)
             }.buttonStyle(.plain).disabled(isFuture)
-                .accessibilityLabel(completed ? "View \(habit.title) entries" : "Complete \(habit.title)")
+                .accessibilityLabel(habit.isNumeric ? "Record values for \(habit.title)" : completed ? "View \(habit.title) entries" : "Complete \(habit.title)")
         }.background(habit.tint.background, in: RoundedRectangle(cornerRadius: 15))
     }
 

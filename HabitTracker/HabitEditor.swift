@@ -12,6 +12,8 @@ struct HabitEditor: View {
     @State private var tint: HabitTint = .mint
     @State private var target = 1
     @State private var unit = ""
+    @State private var numeric = false
+    @State private var metricFields = [MetricField(name: "Value")]
     @State private var kind: ScheduleKind = .weekdays
     @State private var weekdays = Set(1...7)
     @State private var intervalDays = "2"
@@ -40,9 +42,15 @@ struct HabitEditor: View {
         }
     }
     private var future: Bool { Calendar.current.startOfDay(for: startDate) > Calendar.current.startOfDay(for: Date()) }
-    private var recordsFirstEntry: Bool { kind == .once && existing == nil && !future && logOnSave }
+    private var recordsFirstEntry: Bool { !numeric && kind == .once && existing == nil && !future && logOnSave }
+    private var activeFields: [MetricField] { metricFields.filter { !$0.archived } }
+    private var fieldsValid: Bool {
+        !activeFields.isEmpty && activeFields.count <= MetricField.maximumActive && metricFields.count <= MetricField.maximumTotal &&
+        activeFields.allSatisfy { !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } &&
+        Set(activeFields.map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }).count == activeFields.count
+    }
     private var valid: Bool {
-        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !emoji.isEmpty && schedule.isValid &&
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !emoji.isEmpty && schedule.isValid && (!numeric || fieldsValid) &&
         (!recordsFirstEntry || ((1...9999).contains(Int(firstAmount) ?? 0) && firstLogTime <= Date()))
     }
     private var dateRange: ClosedRange<Date> {
@@ -57,6 +65,16 @@ struct HabitEditor: View {
     var body: some View {
         NavigationStack {
             Form {
+                identitySection
+                Section {
+                    Picker("Track", selection: $numeric) {
+                        Text("Check-ins").tag(false)
+                        Text("Values").tag(true)
+                    }.pickerStyle(.segmented).disabled(existing?.allLogs.isEmpty == false)
+                } footer: {
+                    Text(numeric ? "Save numbers with each timestamped entry. Add more than one field for things like rowing duration and distance." : "Count completions toward a goal on each scheduled day.")
+                }
+                if numeric { measurementSection }
                 scheduleSection
                 appearanceSection
                 Section("Color") {
@@ -72,13 +90,13 @@ struct HabitEditor: View {
                     }.padding(.vertical, 6)
                 }
                 Section {
-                    Stepper("Goal on each due day: \(target)", value: $target, in: 1...9999)
-                    HStack {
+                    Stepper("\(numeric ? "Entries" : "Goal") on each due day: \(target)", value: $target, in: 1...9999)
+                    if !numeric { HStack {
                         Text("Unit")
                         TextField("times, min, pages…", text: $unit).multilineTextAlignment(.trailing)
                             .onChange(of: unit) { _, new in unit = String(new.prefix(20)) }
-                    }
-                } header: { Text("A small, doable goal") } footer: { Text("Leave the unit empty for a simple check-in.") }
+                    } }
+                } header: { Text("A small, doable goal") } footer: { Text(numeric ? "This counts entries, rather than the measurement itself. You can record more after meeting the goal." : "Leave the unit empty for a simple check-in.") }
                 Section {
                     Toggle("Gentle reminder", isOn: $reminder)
                         .disabled(existing?.reminderHour == nil && store.activeHabits.filter { $0.reminderHour != nil }.count >= 8)
@@ -159,7 +177,7 @@ struct HabitEditor: View {
                     Button("In a week") { startDate = Day.adding(7, to: Date()) }
                 }.font(.system(size: 13, weight: .medium)).buttonStyle(.borderless)
             }
-            if kind == .once && existing == nil && !future {
+            if !numeric && kind == .once && existing == nil && !future {
                 Toggle("Record first check-in", isOn: $logOnSave)
                 if logOnSave {
                     DatePicker("Time", selection: $firstLogTime, in: firstLogRange, displayedComponents: .hourAndMinute)
@@ -217,13 +235,6 @@ struct HabitEditor: View {
 
     private var appearanceSection: some View {
         Section {
-            HStack(spacing: 14) {
-                Text(emoji).font(.system(size: 33)).frame(width: 58, height: 58)
-                    .background(tint.background, in: RoundedRectangle(cornerRadius: 15))
-                TextField("Task name", text: $title).font(.system(size: 20, weight: .medium))
-                    .accessibilityIdentifier("habit-name")
-                    .onChange(of: title) { _, new in title = String(new.prefix(80)) }
-            }.padding(.vertical, 5)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 12) {
                 ForEach(emojis, id: \.self) { value in
                     Button { emoji = value } label: {
@@ -239,6 +250,81 @@ struct HabitEditor: View {
                     .onChange(of: emoji) { _, new in emoji = String(new.prefix(1)) }
             }
         } header: { Text("Make it yours") }
+    }
+
+    private var identitySection: some View {
+        Section {
+            HStack(spacing: 14) {
+                Text(emoji).font(.system(size: 33)).frame(width: 58, height: 58)
+                    .background(tint.background, in: RoundedRectangle(cornerRadius: 15))
+                TextField("Task name", text: $title).font(.system(size: 20, weight: .medium))
+                    .accessibilityIdentifier("habit-name")
+                    .onChange(of: title) { _, new in title = String(new.prefix(80)) }
+            }.padding(.vertical, 5)
+        }
+    }
+
+    private var measurementSection: some View {
+        Section {
+            if existing?.allLogs.isEmpty != false {
+                Menu("Use a template") {
+                    ForEach(MeasurementTemplate.allCases) { template in
+                        Button(template.rawValue) { apply(template) }
+                    }
+                }.accessibilityIdentifier("measurement-template")
+            }
+            ForEach(Array(metricFields.enumerated()), id: \.element.id) { index, field in
+                if !field.archived {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            TextField("Value name", text: fieldBinding(field.id, unit: false))
+                                .accessibilityIdentifier("metric-name-\(index)")
+                            if activeFields.count > 1 {
+                                Button(role: .destructive) { removeField(field) } label: { Image(systemName: "minus.circle") }
+                                    .buttonStyle(.borderless).accessibilityLabel("Remove \(field.name) field")
+                            }
+                        }
+                        HStack {
+                            Text("Unit").font(.subheadline).foregroundStyle(BloomStyle.secondary)
+                            TextField("kg, lb, min, m…", text: fieldBinding(field.id, unit: true)).multilineTextAlignment(.trailing)
+                                .disabled(existing?.hasValues(for: field.id) == true)
+                                .accessibilityIdentifier("metric-unit-\(index)")
+                        }
+                    }.padding(.vertical, 5)
+                }
+            }
+            Button("Add another value", systemImage: "plus.circle") { metricFields.append(MetricField(name: "")) }
+                .disabled(activeFields.count >= MetricField.maximumActive || metricFields.count >= MetricField.maximumTotal)
+            if !fieldsValid { Text("Give each value a different, nonempty name.").font(.caption).foregroundStyle(.red) }
+        } header: { Text("Values to record") } footer: {
+            Text("Up to six values per entry. Units are fixed after recording a field; add a new field for a different unit. Removing a used field keeps its history and charts.")
+        }
+    }
+
+    private func apply(_ template: MeasurementTemplate) {
+        metricFields = template.fields
+        if title.isEmpty || title == "Weight" || title == "Rowing" {
+            title = template == .rowing ? "Rowing" : template == .custom ? "" : "Weight"
+        }
+        emoji = template == .rowing ? "🚣" : template == .custom ? "📈" : "⚖️"
+        tint = template == .rowing ? .mint : .sky
+    }
+
+    private func removeField(_ field: MetricField) {
+        guard let index = metricFields.firstIndex(where: { $0.id == field.id }) else { return }
+        if existing?.hasValues(for: field.id) == true { metricFields[index].archived = true }
+        else { metricFields.remove(at: index) }
+    }
+
+    private func fieldBinding(_ id: UUID, unit: Bool) -> Binding<String> {
+        Binding(get: {
+            guard let field = metricFields.first(where: { $0.id == id }) else { return "" }
+            return unit ? field.unit : field.name
+        }, set: { text in
+            guard let index = metricFields.firstIndex(where: { $0.id == id }) else { return }
+            if unit { metricFields[index].unit = String(text.prefix(20)) }
+            else { metricFields[index].name = String(text.prefix(40)) }
+        })
     }
 
     private var scheduleExplanation: String {
@@ -260,6 +346,8 @@ struct HabitEditor: View {
         annualDay = monthlyDay
         guard let h = existing else { return }
         title = h.title; emoji = h.emoji; tint = h.tint; target = h.target; unit = h.unit
+        numeric = h.isNumeric
+        metricFields = h.metricFields ?? [MetricField(name: "Value")]
         startDate = h.createdAt; reminder = h.reminderHour != nil
         kind = h.effectiveSchedule.kind
         switch h.effectiveSchedule {
@@ -278,7 +366,13 @@ struct HabitEditor: View {
         var habit = existing ?? Habit(title: title)
         habit.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         habit.emoji = emoji; habit.tint = tint; habit.target = target
-        habit.unit = unit.trimmingCharacters(in: .whitespacesAndNewlines)
+        habit.unit = numeric ? "" : unit.trimmingCharacters(in: .whitespacesAndNewlines)
+        habit.metricFields = numeric ? metricFields.map { field in
+            var clean = field
+            clean.name = clean.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            clean.unit = clean.unit.trimmingCharacters(in: .whitespacesAndNewlines)
+            return clean
+        } : nil
         habit.weekdays = kind == .weekdays ? weekdays : Set(1...7)
         habit.createdAt = Calendar.current.startOfDay(for: startDate)
         habit.oneOffDate = kind == .once ? Calendar.current.startOfDay(for: startDate) : nil

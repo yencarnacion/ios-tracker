@@ -61,6 +61,7 @@ final class HabitStore {
     }
 
     func setCount(_ value: Int, for id: UUID, on date: Date) {
+        guard habit(id)?.isNumeric == false else { return }
         guard Calendar.current.startOfDay(for: date) <= Calendar.current.startOfDay(for: Date()) else { return }
         if update({ doc in
             guard let index = doc.habits.firstIndex(where: { $0.id == id }) else { return }
@@ -68,12 +69,18 @@ final class HabitStore {
         }) { UIImpactFeedbackGenerator(style: .soft).impactOccurred() }
     }
 
-    func record(_ log: HabitLog, for id: UUID) {
-        guard log.occurredAt <= Date(), (1...9999).contains(log.amount) else { return }
-        if update({ doc in
+    @discardableResult
+    func record(_ log: HabitLog, for id: UUID) -> Bool {
+        guard log.occurredAt <= Date(), let habit = habit(id), habit.accepts(log) else {
+            errorMessage = "Enter at least one valid value before saving."
+            return false
+        }
+        let saved = update { doc in
             guard let index = doc.habits.firstIndex(where: { $0.id == id }) else { return }
             doc.habits[index].record(log)
-        }) { UIImpactFeedbackGenerator(style: .soft).impactOccurred() }
+        }
+        if saved { UIImpactFeedbackGenerator(style: .soft).impactOccurred() }
+        return saved
     }
 
     func deleteLog(_ logID: UUID, for habitID: UUID) {
@@ -86,7 +93,7 @@ final class HabitStore {
     func completeAll(on date: Date) {
         guard Calendar.current.startOfDay(for: date) <= Calendar.current.startOfDay(for: Date()) else { return }
         _ = update { doc in
-            for index in doc.habits.indices where doc.habits[index].archivedAt == nil && doc.habits[index].isScheduled(on: date) && !doc.habits[index].isComplete(on: date) {
+            for index in doc.habits.indices where doc.habits[index].archivedAt == nil && !doc.habits[index].isNumeric && doc.habits[index].isScheduled(on: date) && !doc.habits[index].isComplete(on: date) {
                 doc.habits[index].setCount(doc.habits[index].target, on: date)
             }
         }

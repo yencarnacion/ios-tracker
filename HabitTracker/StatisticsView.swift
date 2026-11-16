@@ -40,6 +40,8 @@ struct StatisticsView: View {
                     }.padding(.vertical, 2)
                 }.scrollIndicators(.hidden)
 
+                if let selectedID, store.habit(selectedID)?.isNumeric == true { MetricChartView(habitID: selectedID) }
+
                 VStack(spacing: 15) {
                     HStack {
                         Button { moveMonth(-1) } label: { Image(systemName: "chevron.left").frame(width: 38, height: 35) }
@@ -154,9 +156,9 @@ struct DayHistoryView: View {
                         }
                         ForEach(habit.entry(on: date).logs.sorted { $0.occurredAt < $1.occurredAt }) { log in
                             HStack {
-                                Text(log.occurredAt.formatted(date: .omitted, time: .shortened)).foregroundStyle(BloomStyle.secondary)
+                                Text(log.occurredAt.formatted(date: .omitted, time: .standard)).foregroundStyle(BloomStyle.secondary)
                                 Spacer()
-                                Text("+\(log.amount) \(habit.unit)")
+                                Text(habit.isNumeric ? habit.valueSummary(for: log) : "+\(log.amount) \(habit.unit)")
                             }.font(.subheadline)
                         }
                     }

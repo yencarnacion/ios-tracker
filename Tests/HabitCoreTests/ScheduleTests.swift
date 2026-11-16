@@ -157,7 +157,7 @@ final class ScheduleTests: XCTestCase {
             var h = habit; h.removeValue(forKey: "schedule"); return h
         }
         let migrated = try HabitDocument.decode(JSONSerialization.data(withJSONObject: json))
-        XCTAssertEqual(migrated.version, 2)
+        XCTAssertEqual(migrated.version, 3)
         XCTAssertEqual(migrated.habits, old.habits)
         XCTAssertEqual(migrated.moods, old.moods)
         XCTAssertEqual(migrated.habits[0].effectiveSchedule, .weekdays([2, 3, 4, 5, 6]))

@@ -33,10 +33,11 @@ struct ActivityView: View {
                                         Text(item.habit.title).foregroundStyle(BloomStyle.ink)
                                         Text(item.log.occurredAt.formatted(date: .omitted, time: .standard))
                                             .font(.subheadline).foregroundStyle(BloomStyle.secondary)
+                                        if item.habit.isNumeric { Text(item.habit.valueSummary(for: item.log)).font(.subheadline).foregroundStyle(BloomStyle.ink) }
                                         if !item.log.note.isEmpty { Text(item.log.note).font(.caption).foregroundStyle(BloomStyle.secondary) }
                                     }
                                     Spacer()
-                                    Text("+\(item.log.amount) \(item.habit.unit)").font(.subheadline).foregroundStyle(BloomStyle.ink)
+                                    if !item.habit.isNumeric { Text("+\(item.log.amount) \(item.habit.unit)").font(.subheadline).foregroundStyle(BloomStyle.ink) }
                                 }.padding(.vertical, 5)
                             }
                         }

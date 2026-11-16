@@ -36,9 +36,9 @@ struct SettingsView: View {
                         if let url = store.backupURL() { sharedFile = SharedFile(url: url) }
                     } label: { settingsRow("Export backup", symbol: "square.and.arrow.up", color: BloomStyle.mint) }
                     Button { importing = true } label: { settingsRow("Restore backup", symbol: "square.and.arrow.down", color: .blue) }
-                    Button { exportCSV() } label: { settingsRow("Export check-ins as CSV", symbol: "tablecells", color: .purple) }
+                    Button { exportCSV() } label: { settingsRow("Export data as CSV", symbol: "tablecells", color: .purple) }
                 } header: { Text("Your data") } footer: {
-                    Text("Habits, one-off items, exact timestamps, notes, and moods are stored on this iPhone. Export a backup to keep a copy or move to another device. CSV includes a row for every check-in.")
+                    Text("Tasks, measurements, timestamps, notes, and moods stay on this iPhone. Export a backup to keep a copy. CSV includes a row per numeric value, with the entry ID and timestamp, or per ordinary check-in.")
                 }
                 Section {
                     Button {
@@ -92,24 +92,12 @@ struct SettingsView: View {
     }
 
     private func exportCSV() {
-        func cell(_ value: String) -> String {
-            // Prevent spreadsheet formula interpretation of user-entered text.
-            let safe = ["=", "+", "-", "@", "\t", "\r"].contains(where: value.hasPrefix) ? "'" + value : value
-            return "\"" + safe.replacingOccurrences(of: "\"", with: "\"\"") + "\""
-        }
-        var rows = [["Item", "Type", "Schedule", "Local date", "Local time", "Timestamp (UTC)", "Amount", "Unit", "Note"]]
-        let pairs = store.document.habits.flatMap { habit in habit.allLogs.map { (habit, $0) } }
-            .sorted { $0.1.occurredAt < $1.1.occurredAt }
-        for (habit, log) in pairs {
-            rows.append([habit.title, habit.isOneOff ? "One-off" : "Recurring", habit.effectiveSchedule.summary(), Day.key(log.occurredAt),
-                         log.occurredAt.formatted(date: .omitted, time: .standard), log.occurredAt.ISO8601Format(),
-                         String(log.amount), habit.unit, log.note])
-        }
-        let csv = rows.map { $0.map(cell).joined(separator: ",") }.joined(separator: "\r\n")
-        let url = URL.temporaryDirectory.appending(path: "ios-tracker-check-ins.csv")
+        let csv = ActivityCSV.export(store.document)
+        let url = URL.temporaryDirectory.appending(path: "ios-tracker-data.csv")
         do { try Data(csv.utf8).write(to: url, options: .atomic); sharedFile = SharedFile(url: url) }
         catch { store.errorMessage = error.localizedDescription }
     }
+
 }
 
 struct ManageHabitsView: View {
@@ -128,7 +116,7 @@ struct ManageHabitsView: View {
                         Text(habit.emoji).font(.system(size: 26))
                         VStack(alignment: .leading, spacing: 4) {
                             Text(habit.title)
-                            Text(habit.effectiveSchedule.summary())
+                            Text(habit.effectiveSchedule.summary() + (habit.isNumeric ? " · \(habit.activeMetrics.count) values" : ""))
                                 .font(.caption).foregroundStyle(BloomStyle.secondary)
                         }
                         Spacer()

@@ -9,8 +9,10 @@ public struct HabitLog: Identifiable, Codable, Equatable, Sendable {
     public var occurredAt: Date
     public var amount: Int
     public var note: String
-    public init(id: UUID = UUID(), occurredAt: Date = Date(), amount: Int = 1, note: String = "") {
+    public var values: [String: Double]?
+    public init(id: UUID = UUID(), occurredAt: Date = Date(), amount: Int = 1, note: String = "", values: [String: Double]? = nil) {
         self.id = id; self.occurredAt = occurredAt; self.amount = amount; self.note = note
+        self.values = values
     }
 }
 
@@ -35,6 +37,7 @@ public struct Habit: Identifiable, Codable, Equatable, Sendable {
     public var oneOffDate: Date?
     /// Missing in version 1 backups; those retain their weekday or one-off schedule.
     public var schedule: TaskSchedule?
+    public var metricFields: [MetricField]?
     public var createdAt: Date
     public var archivedAt: Date?
     public var reminderHour: Int?
@@ -44,13 +47,14 @@ public struct Habit: Identifiable, Codable, Equatable, Sendable {
     public init(id: UUID = UUID(), title: String, emoji: String = "🌟", tint: HabitTint = .mint,
                 target: Int = 1, unit: String = "", weekdays: Set<Int> = Set(1...7),
                 createdAt: Date = Date(), oneOffDate: Date? = nil, archivedAt: Date? = nil, reminderHour: Int? = nil,
-                reminderMinute: Int = 0, entries: [String: HabitEntry] = [:], schedule: TaskSchedule? = nil) {
+                reminderMinute: Int = 0, entries: [String: HabitEntry] = [:], schedule: TaskSchedule? = nil, metricFields: [MetricField]? = nil) {
         self.id = id; self.title = title; self.emoji = emoji; self.tint = tint
         self.target = target; self.unit = unit; self.weekdays = weekdays
         self.createdAt = createdAt; self.oneOffDate = oneOffDate; self.archivedAt = archivedAt
         self.reminderHour = reminderHour; self.reminderMinute = reminderMinute
         self.entries = entries
         self.schedule = schedule
+        self.metricFields = metricFields
     }
 
     public var effectiveSchedule: TaskSchedule { schedule ?? oneOffDate.map(TaskSchedule.once) ?? .weekdays(weekdays) }
@@ -86,6 +90,7 @@ public struct Habit: Identifiable, Codable, Equatable, Sendable {
     }
 
     public mutating func setCount(_ count: Int, on date: Date, calendar: Calendar = .current) {
+        guard !isNumeric else { return }
         let key = Day.key(date, calendar: calendar)
         var value = entries[key] ?? HabitEntry()
         let desired = max(0, count)
@@ -213,7 +218,7 @@ public struct HabitSummary: Equatable, Sendable {
 }
 
 public struct HabitDocument: Codable, Equatable, Sendable {
-    public var version: Int = 2
+    public var version: Int = 3
     public var habits: [Habit]
     public var moods: [String: String]
     public init(habits: [Habit] = [], moods: [String: String] = [:]) {
@@ -232,7 +237,7 @@ public struct HabitDocument: Codable, Equatable, Sendable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         var doc = try decoder.decode(Self.self, from: data)
-        guard (1...2).contains(doc.version) else { throw DocumentError.version }
+        guard (1...3).contains(doc.version) else { throw DocumentError.version }
         guard doc.habits.count <= 500, Set(doc.habits.map(\.id)).count == doc.habits.count else { throw DocumentError.invalid }
         for h in doc.habits {
             guard !h.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -242,11 +247,21 @@ public struct HabitDocument: Codable, Equatable, Sendable {
                   (0...59).contains(h.reminderMinute),
                   h.effectiveSchedule.isValid,
                   h.createdAt >= Date(timeIntervalSince1970: 0) else { throw DocumentError.invalid }
+            if let fields = h.metricFields {
+                guard !fields.isEmpty, fields.count <= MetricField.maximumTotal,
+                      !h.activeMetrics.isEmpty, h.activeMetrics.count <= MetricField.maximumActive,
+                      Set(fields.map(\.id)).count == fields.count,
+                      Set(h.activeMetrics.map { $0.name.lowercased() }).count == h.activeMetrics.count else { throw DocumentError.invalid }
+                for field in fields {
+                    guard !field.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                          field.name.count <= 40, field.unit.count <= 20 else { throw DocumentError.invalid }
+                }
+            }
             var logIDs = Set<UUID>()
             for (key, entry) in h.entries {
                 guard Day.date(key) != nil, entry.logs.count <= 1000, entry.note.count <= 5000 else { throw DocumentError.invalid }
                 for log in entry.logs {
-                    guard (1...9999).contains(log.amount), log.note.count <= 5000,
+                    guard h.accepts(log),
                           log.occurredAt >= Date(timeIntervalSince1970: 0),
                           logIDs.insert(log.id).inserted else { throw DocumentError.invalid }
                 }
@@ -255,7 +270,7 @@ public struct HabitDocument: Codable, Equatable, Sendable {
         for (key, mood) in doc.moods {
             guard Day.date(key) != nil, mood.count <= 4 else { throw DocumentError.invalid }
         }
-        doc.version = 2
+        doc.version = 3
         return doc
     }
 
