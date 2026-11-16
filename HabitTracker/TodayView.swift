@@ -168,7 +168,7 @@ struct TodayView: View {
                         Text(habit.title).font(.system(size: 17, weight: .medium)).foregroundStyle(BloomStyle.ink)
                             .multilineTextAlignment(.leading).lineLimit(2)
                         if let last = habit.entry(on: date).logs.max(by: { $0.occurredAt < $1.occurredAt }) {
-                            Text("\(habit.entry(on: date).logs.count) check-ins · \(last.occurredAt.formatted(date: .omitted, time: .shortened))")
+                            Text("\(habit.entry(on: date).logs.count) \(habit.entry(on: date).logs.count == 1 ? "check-in" : "check-ins") · \(last.occurredAt.formatted(date: .omitted, time: .shortened))")
                                 .font(.system(size: 11)).foregroundStyle(BloomStyle.secondary)
                         } else if habit.oneOffDate != nil {
                             Text("Just this day").font(.system(size: 11)).foregroundStyle(BloomStyle.secondary)

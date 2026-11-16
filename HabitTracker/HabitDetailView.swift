@@ -65,7 +65,7 @@ struct HabitDetailView: View {
                                     .background(habit.tint.accent, in: Capsule())
                             }.accessibilityIdentifier("add-one").disabled(isFuture)
                             Button { showLog = true } label: {
-                                Image(systemName: "clock.badge.plus").font(.system(size: 23))
+                                Image(systemName: "clock").font(.system(size: 23))
                                     .foregroundStyle(habit.tint.accent).frame(width: 51, height: 51)
                                     .background(.white.opacity(0.8), in: Circle())
                             }.accessibilityLabel("Log amount and time").disabled(isFuture)
@@ -145,7 +145,7 @@ struct LogRow: View {
             Image(systemName: "clock").font(.system(size: 15)).foregroundStyle(habit.tint.accent)
                 .frame(width: 32, height: 40)
             VStack(alignment: .leading, spacing: 4) {
-                Text(log.occurredAt.formatted(date: .omitted, time: .shortened)).font(.system(size: 16, weight: .semibold))
+                Text(log.occurredAt.formatted(date: .omitted, time: .standard)).font(.system(size: 16, weight: .semibold))
                 if !log.note.isEmpty { Text(log.note).font(.system(size: 13)).foregroundStyle(BloomStyle.secondary) }
             }
             Spacer()

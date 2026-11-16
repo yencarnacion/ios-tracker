@@ -31,7 +31,7 @@ struct ActivityView: View {
                                     Text(item.habit.emoji).font(.system(size: 28))
                                     VStack(alignment: .leading, spacing: 5) {
                                         Text(item.habit.title).foregroundStyle(BloomStyle.ink)
-                                        Text(item.log.occurredAt.formatted(date: .omitted, time: .shortened))
+                                        Text(item.log.occurredAt.formatted(date: .omitted, time: .standard))
                                             .font(.subheadline).foregroundStyle(BloomStyle.secondary)
                                         if !item.log.note.isEmpty { Text(item.log.note).font(.caption).foregroundStyle(BloomStyle.secondary) }
                                     }

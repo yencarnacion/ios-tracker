@@ -29,6 +29,10 @@ final class BloomUITests: XCTestCase {
         app.buttons["add-one"].tap()
         XCTAssertEqual(app.staticTexts["habit-count"].label, "2")
         app.buttons["Close habit"].tap()
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        app.buttons[tomorrow.formatted(date: .complete, time: .omitted)].tap()
+        XCTAssertFalse(app.buttons["habit-Collected parcel"].exists)
+        app.buttons[Date().formatted(date: .complete, time: .omitted)].tap()
         app.buttons["All activity timeline"].tap()
         XCTAssertTrue(app.staticTexts["Collected parcel"].exists)
         XCTAssertTrue(app.staticTexts["Drink water"].exists)
@@ -39,5 +43,10 @@ final class BloomUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Habit Tracker"].exists)
         app.buttons["Settings tab"].tap()
         XCTAssertTrue(app.buttons["Export backup"].exists)
+        app.terminate()
+        app.launchArguments = ["--uitesting"]
+        app.launch()
+        app.buttons["habit-Drink water"].tap()
+        XCTAssertEqual(app.staticTexts["habit-count"].label, "5")
     }
 }

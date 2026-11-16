@@ -16,3 +16,15 @@ jobs:
           xcodebuild -project Bloom.xcodeproj -scheme Bloom
           -destination 'generic/platform=iOS Simulator'
           -derivedDataPath build/DerivedData build CODE_SIGNING_ALLOWED=NO
+      - name: End-to-end UI tests
+        run: >-
+          xcodebuild -project Bloom.xcodeproj -scheme Bloom
+          -destination 'platform=iOS Simulator,name=iPhone 16'
+          -derivedDataPath build/DerivedData
+          -parallel-testing-enabled NO
+          -resultBundlePath build/Bloom-UI.xcresult test CODE_SIGNING_ALLOWED=NO
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-test-results
+          path: build/Bloom-UI.xcresult

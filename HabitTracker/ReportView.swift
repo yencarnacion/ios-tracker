@@ -102,7 +102,8 @@ struct ReportView: View {
                         HStack(spacing: 0) {
                             ForEach(Array(buckets.enumerated()), id: \.offset) { _, bucket in
                                 let scheduled = bucket.filter { habit.isScheduled(on: $0) }
-                                let rate = HabitSummary(habits: [habit], days: bucket).rate
+                                let elapsed = scheduled.filter { Calendar.current.startOfDay(for: $0) <= Calendar.current.startOfDay(for: Date()) }
+                                let rate = elapsed.isEmpty ? 0 : elapsed.reduce(0) { $0 + habit.progress(on: $1) } / Double(elapsed.count)
                                 Button {
                                     if period != .yearly, let day = bucket.first { selectedDate = day; selectedHabit = habit }
                                 } label: {
