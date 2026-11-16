@@ -24,6 +24,7 @@ targets:
       - package: HabitCore
     settings:
       base:
+        PRODUCT_NAME: ios-tracker
         PRODUCT_BUNDLE_IDENTIFIER: com.yencarnacion.bloomhabits
         INFOPLIST_FILE: HabitTracker/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
