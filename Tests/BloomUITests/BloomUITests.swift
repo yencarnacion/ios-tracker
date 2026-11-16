@@ -94,6 +94,8 @@ final class BloomUITests: XCTestCase {
         app.launchArguments = ["--uitesting", "--reset-data"]
         app.launch()
         app.buttons["Add habit"].tap()
+        let name = app.textFields["habit-name"]
+        name.tap(); name.typeText("Interval task")
         app.buttons["schedule-type"].tap()
         app.buttons["Every X days"].tap()
         let interval = app.textFields["interval-days"]
@@ -102,14 +104,13 @@ final class BloomUITests: XCTestCase {
         interval.typeText("730")
         XCTAssertEqual(interval.value as? String, "730")
         app.buttons["due-tomorrow"].tap()
-        let name = app.textFields["habit-name"]
-        name.tap(); name.typeText("Interval task")
         app.buttons["save-habit"].tap()
         app.buttons["Upcoming tasks"].tap()
         app.buttons["upcoming-Interval task"].tap()
         XCTAssertTrue(app.staticTexts["Every 730 days"].exists)
         app.buttons["Item options"].tap()
         app.buttons["Edit item"].tap()
+        if !app.textFields["interval-days"].exists { app.swipeUp() }
         XCTAssertEqual(app.textFields["interval-days"].value as? String, "730")
         app.textFields["interval-days"].doubleTap()
         if app.menuItems["Select All"].exists { app.menuItems["Select All"].tap() }

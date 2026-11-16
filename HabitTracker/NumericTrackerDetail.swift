@@ -46,7 +46,7 @@ struct NumericTrackerDetail: View {
                         }
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Latest values").font(.system(size: 18, weight: .semibold))
-                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: min(2, habit.activeMetrics.count)), spacing: 12) {
                                 ForEach(habit.activeMetrics) { field in
                                     let latest = habit.series(for: field.id, through: Date()).latest
                                     VStack(alignment: .leading, spacing: 6) {

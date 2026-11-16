@@ -9,6 +9,7 @@ final class NumericUITests: XCTestCase {
         app.buttons["Add habit"].tap()
         app.buttons["Values"].tap()
         app.buttons["measurement-template"].tap()
+        XCTAssertTrue(app.buttons[template].waitForExistence(timeout: 5))
         app.buttons[template].tap()
         app.buttons["save-habit"].tap()
         app.swipeUp()

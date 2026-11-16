@@ -28,6 +28,7 @@ struct HabitEditor: View {
     @State private var reminderTime = Calendar.current.date(from: DateComponents(hour: 9)) ?? Date()
     @State private var saving = false
     @State private var permissionDenied = false
+    @State private var choosingTemplate = false
 
     private let emojis = ["🌟", "💧", "🏃", "📖", "🌱", "☀️", "🧘", "💊", "🍎", "😴", "🎨", "💪", "🚶", "✍️", "🎯", "🧹"]
     private let weekLabels = ["M", "T", "W", "T", "F", "S", "S"]
@@ -115,6 +116,12 @@ struct HabitEditor: View {
             .onAppear(perform: load)
             .onChange(of: startDate) { _, day in firstLogTime = min(Date(), Day.time(on: day, from: firstLogTime)) }
             .onChange(of: annualMonth) { _, _ in annualDay = min(annualDay, annualDayCount) }
+            .confirmationDialog("Choose values to track", isPresented: $choosingTemplate, titleVisibility: .visible) {
+                ForEach(MeasurementTemplate.allCases) { template in
+                    Button(template.rawValue) { apply(template) }
+                }
+                Button("Cancel", role: .cancel) { }
+            }
             .alert("Reminders are off", isPresented: $permissionDenied) {
                 Button("Open Settings") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
@@ -267,11 +274,8 @@ struct HabitEditor: View {
     private var measurementSection: some View {
         Section {
             if existing?.allLogs.isEmpty != false {
-                Menu("Use a template") {
-                    ForEach(MeasurementTemplate.allCases) { template in
-                        Button(template.rawValue) { apply(template) }
-                    }
-                }.accessibilityIdentifier("measurement-template")
+                Button("Use a template") { choosingTemplate = true }
+                    .buttonStyle(.borderless).accessibilityIdentifier("measurement-template")
             }
             ForEach(Array(metricFields.enumerated()), id: \.element.id) { index, field in
                 if !field.archived {

@@ -33,6 +33,7 @@ struct MetricChartView: View {
     }
     private var axisFormat: Date.FormatStyle {
         if let first = series.first, let last = series.latest, Calendar.current.isDate(first.date, inSameDayAs: last.date) {
+            if first.date != last.date && last.date.timeIntervalSince(first.date) < 120 { return .dateTime.hour().minute().second() }
             return .dateTime.hour().minute()
         }
         if let first = series.first, let last = series.latest,
@@ -57,7 +58,7 @@ struct MetricChartView: View {
                             Text(field.label).font(.system(size: 13, weight: .medium)).lineLimit(2)
                             Image(systemName: "chevron.down").font(.caption2)
                         }
-                    }.accessibilityIdentifier("chart-metric")
+                    }.buttonStyle(.borderless).accessibilityIdentifier("chart-metric")
                 }
             }
             Picker("Time range", selection: $range) {
@@ -83,11 +84,11 @@ struct MetricChartView: View {
                         RuleMark(x: .value("Selected time", selectedPoint.date)).foregroundStyle(BloomStyle.secondary.opacity(0.35))
                     }
                 }
-                .chartXScale(domain: xRange).chartYScale(domain: visible.valueRange)
+                .chartXScale(domain: xRange, range: .plotDimension(padding: 18)).chartYScale(domain: visible.valueRange)
                 .chartXSelection(value: $selectedTime)
-                .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { AxisGridLine(); AxisValueLabel(format: axisFormat) } }
+                .chartXAxis { AxisMarks(values: .automatic(desiredCount: 3)) { AxisGridLine(); AxisValueLabel(format: axisFormat) } }
                 .chartYAxis { AxisMarks(position: .leading) }
-                .frame(height: 205).accessibilityLabel("\(field.label) over time, \(visible.points.count) recorded values")
+                .frame(height: 205).accessibilityLabel("\(field.label) over time, \(visible.points.count) recorded \(visible.points.count == 1 ? "value" : "values")")
                 .accessibilityIdentifier("measurement-chart")
                 HStack(alignment: .top) {
                     summary("Entries", value: "\(visible.points.count)")
