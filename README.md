@@ -4,9 +4,9 @@ A native, offline iPhone app for repeating habits and the things you did just on
 
 ## What it does
 
-- **Recurring tasks:** choose selected weekdays, every X days (1–730), every month, or an annual month/day. Set a first due date up to two years ahead, a goal, unit, emoji, color, and optional local reminder.
+- **Recurring tasks:** choose selected weekdays, every X days (1–730), every month, or an annual month/day. Set a future first due date, a goal, unit, emoji, color, and optional local reminder.
 - **Individual check-ins:** each action saves its own ID, exact timestamp, amount, and optional note. Log multiple times in a day, even after meeting the goal.
-- **One-time tasks:** choose **One time** and any due date up to two years ahead. Past or present one-offs can record their first timestamp immediately; future tasks wait until their due day and never repeat.
+- **One-time tasks:** choose **One time** and a past, present, or future due date. Past or present one-offs can record their first timestamp immediately; future tasks wait until their due day and never repeat.
 - **Timelines:** view a habit’s entries or open **Timeline** for activity across all items. Edit timestamps, amounts, or notes; delete individual entries after confirmation.
 - **Upcoming:** see the next occurrence of every active task, open its details, or schedule another future task. The editor previews the next three due dates before saving.
 - **History:** browse any day, add a one-off from the **All** menu or calendar, and backfill a check-in with its actual time.
@@ -24,7 +24,7 @@ A native, offline iPhone app for repeating habits and the things you did just on
 | Every year on September 12 | **Every year → September → 12** |
 | Just once on a future date | **One time**, then set **Due date** |
 
-Intervals stay anchored to the first due date, even if a completion is late. A monthly task on the 29th, 30th, or 31st uses the last day of shorter months, then returns to the selected day the following month. An annual February 29 task runs only in leap years. Recurring tasks continue beyond the two-year date-picker horizon; that horizon controls how far ahead you can set the first due date or a one-time task.
+Intervals stay anchored to the first due date, even if a completion is late. A monthly task on the 29th, 30th, or 31st uses the last day of shorter months, then returns to the selected day the following month. An annual February 29 task runs only in leap years. The 730-day cap applies to day intervals; it does not restrict how far ahead you can choose a first due date or a one-time due date.
 
 ## Run
 

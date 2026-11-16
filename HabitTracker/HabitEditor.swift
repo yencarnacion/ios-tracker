@@ -46,7 +46,7 @@ struct HabitEditor: View {
         (!recordsFirstEntry || ((1...9999).contains(Int(firstAmount) ?? 0) && firstLogTime <= Date()))
     }
     private var dateRange: ClosedRange<Date> {
-        let upper = Calendar.current.date(byAdding: .year, value: 2, to: Date()) ?? Day.adding(730, to: Date())
+        let upper = Date.distantFuture
         return Date(timeIntervalSince1970: 0)...max(upper, existing?.createdAt ?? upper, existing?.oneOffDate ?? upper)
     }
     private var annualDayCount: Int {
